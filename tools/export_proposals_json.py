@@ -4,8 +4,8 @@ Usage (from the repo root):
     python3 tools/export_proposals_json.py [workbook.xlsx] [output.json]
 
 Reads every real entry on the "Proposal Log" sheet (row 6 down; row 5 is the
-grey example row) and skips rows with no Job. Blank Yes/No cells count as "No",
-the same way the Summary sheet treats them.
+grey example row) and skips rows with no Job. Blank Yes/No cells count as "No"
+and a blank Result counts as "Open", the same way the Summary sheet treats them.
 """
 import json
 import sys
@@ -17,7 +17,7 @@ XLSX = sys.argv[1] if len(sys.argv) > 1 else "upwork-proposal-log.xlsx"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "proposals.json"
 
 FIRST_ROW = 6
-KEYS = ["date", "job", "connects", "bid", "viewed", "replied", "interviewed", "hired", "notes"]
+KEYS = ["date", "job", "connects", "bid", "viewed", "replied", "interviewed", "hired", "result", "notes"]
 
 
 def number(value):
@@ -29,6 +29,11 @@ def number(value):
 
 def yes_no(value):
     return "Yes" if str(value or "").strip().lower() == "yes" else "No"
+
+
+def outcome(value):
+    text = str(value or "").strip().lower()
+    return "Won" if text == "won" else "Lost" if text == "lost" else "Open"
 
 
 def iso_date(value):
@@ -55,6 +60,7 @@ for cells in sheet.iter_rows(min_row=FIRST_ROW, max_col=len(KEYS), values_only=T
             "replied": yes_no(record["replied"]),
             "interviewed": yes_no(record["interviewed"]),
             "hired": yes_no(record["hired"]),
+            "result": outcome(record["result"]),
             "notes": str(record["notes"] or "").strip(),
         }
     )
